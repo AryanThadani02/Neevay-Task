@@ -228,13 +228,19 @@ const SearchResultCards = () => {
         <div className="mt-4">
       <SearchResultBadges />
           
-          {currentBusinesses.map((business) => (
-            <BusinessCard
-              key={business.vendorId}
-              business={business}
-              onViewContact={handleViewContact}
-            />
-          ))}
+      {currentBusinesses.length > 0 ? (
+            currentBusinesses.map((business) => (
+              <BusinessCard
+                key={business.vendorId}
+                business={business}
+                onViewContact={handleViewContact}
+              />
+            ))
+          ) : (
+            <div className="text-gray-500 text-lg mt-4">
+              No data available for the current filters.
+            </div>
+          )}
         </div>
         <SearchResultPagination
           totalPages={totalPages}
