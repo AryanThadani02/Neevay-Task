@@ -8,6 +8,7 @@ const SearchResultFilters = () => {
   // State variables
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { setdisplayedVendors ,setSearchBadges} = useVendors();
+  const [servicesOpen, setServicesOpen] = useState(false);
   const [showOnlyVerified, setShowOnlyVerified] = useState(false);
   const [projectsCompletedFilter, setProjectsCompletedFilter] = useState(0);
   const [citySearchQuery, setCitySearchQuery] = useState("");
@@ -22,6 +23,7 @@ const SearchResultFilters = () => {
   const [turnover, setTurnover] = useState(false);
   const [range, setRange] = useState([0, 100]);
   const [businessAge, setBusinessAge] = useState(false);
+  const [selectedServices, setSelectedServices] = useState([]);
 
   // Extract all unique cities from vendor data
   const allCities = [
@@ -33,6 +35,10 @@ const SearchResultFilters = () => {
       )
     ),
   ].slice(0, 10); // Limit to the first 10 cities
+
+  const allServices = [
+    ...new Set(vendorData.flatMap((vendor) => vendor.services)),
+  ];
 
   const handleTurnoverDropdown = () => {
     setTurnover(!turnover);
@@ -91,7 +97,16 @@ const SearchResultFilters = () => {
       );
     }
   };
-
+  const handleServiceCheckboxChange = (event) => {
+    const service = event.target.value;
+    if (event.target.checked) {
+      setSelectedServices([...selectedServices, service]);
+    } else {
+      setSelectedServices(
+        selectedServices.filter((selectedService) => selectedService !== service)
+      );
+    }
+  };
   const convertedVendorsData = vendorData.map((vendor) => ({
     ...vendor,
     turnover: Number(vendor.turnover.replace(/[^0-9.-]+/g, "")), // Remove non-numeric characters and convert to number
@@ -175,6 +190,14 @@ const SearchResultFilters = () => {
           }
         }
         return true;
+      })
+      .filter((vendor) => {
+        if (selectedServices.length > 0) {
+          return selectedServices.every((service) =>
+            vendor.services.includes(service)
+          );
+        }
+        return true;
       });
 
     setdisplayedVendors(filteredVendors);
@@ -193,6 +216,8 @@ const SearchResultFilters = () => {
       activeFilters.push(`Labor Strength: ${selectedLaborStrength}`);
     if (selectedBusinessAge)
       activeFilters.push(`Business Age: ${selectedBusinessAge} years`);
+    if (selectedServices.length > 0)
+      activeFilters.push(`Services: ${selectedServices.join(", ")}`);
 
     setSearchBadges(activeFilters); // Update search badges context
     
@@ -206,6 +231,7 @@ const SearchResultFilters = () => {
     citySearchQuery,
     selectedLaborStrength,
     selectedBusinessAge,
+    selectedServices,
     setdisplayedVendors,
     setSearchBadges,
   ]);
@@ -250,7 +276,49 @@ const SearchResultFilters = () => {
               <div className="mr-[2px] relative w-11 h-6 bg-[#ACACAC] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
           </div>
+          
+           {/* Services */}
+           <div>
+            <button
+              onClick={() => setServicesOpen(!servicesOpen)}
+              className="w-full flex items-center justify-between text-base text-[#2F2F1C] font-semibold"
+            >
+              Services
+              <img
+                src="https://storagereponeevaydevcdn.blob.core.windows.net/business/dropdown_arrow.svg"
+                alt="v"
+                className={`transition-transform duration-300 ${
+                  servicesOpen ? "rotate-180" : "rotate-0"
+                }`}
+              />
+            </button>
 
+            {servicesOpen && (
+              <div>
+                <div
+                  style={{
+                    maxHeight: "200px",
+                    overflowY: "scroll",
+                    msOverflowStyle: "none",
+                    scrollbarWidth: "none",
+                  }}
+                  className="mt-3 flex flex-col gap-4"
+                >
+                  {allServices.map((service, index) => (
+                    <label key={index} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        value={service}
+                        onChange={handleServiceCheckboxChange}
+                        className="form-checkbox"
+                      />
+                      <span className="ms-2 text-sm">{service}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           {/* Locations */}
           <div>
             <button
@@ -467,7 +535,7 @@ const SearchResultFilters = () => {
             {businessAge && (
               <div className="mt-3">
               <div className="flex flex-col mt-2">
-                {["0-20","20-40","40+"].map((option) => (
+                {["0-20","20-40"].map((option) => (
                   <label key={option} className="flex items-center mb-2">
                     <input
                       type="radio"

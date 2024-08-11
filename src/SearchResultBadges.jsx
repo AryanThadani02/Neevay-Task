@@ -13,7 +13,7 @@ const SearchResultBadges = () => {
    
 
     return (
-        <div className='space-x-4 mt-8'>
+        <div className='space-x-4 mt-20'>
             {searchBadges.map((filter, index) => (
                 <span key={index} id="badge-dismiss-dark" className="inline-flex items-center px-2 py-1 text-sm font-medium text-black bg-[#E0E0D3]">
                     {filter}
