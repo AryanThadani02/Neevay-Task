@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useVendors } from "./VendorsContext";
 import vendorData from "./vendorData.json";
 import ReactSlider from "react-slider";
-import SearchResultBadges from "./SearchResultBadges";
+
 
 const SearchResultFilters = () => {
   // State variables
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { setdisplayedVendors } = useVendors();
+  const { setdisplayedVendors ,setSearchBadges} = useVendors();
   const [showOnlyVerified, setShowOnlyVerified] = useState(false);
   const [projectsCompletedFilter, setProjectsCompletedFilter] = useState(0);
   const [citySearchQuery, setCitySearchQuery] = useState("");
@@ -102,7 +102,6 @@ const SearchResultFilters = () => {
   );
 
   const citiesToShow = showAll ? filteredCities : filteredCities.slice(0, 4);
-
   useEffect(() => {
     const filteredVendors = convertedVendorsData
       .filter((vendor) => !showOnlyVerified || vendor.verifiedStatus) // Filter by verified status if the checkbox is checked
@@ -134,12 +133,12 @@ const SearchResultFilters = () => {
           const [minStrength, maxStrength] = selectedLaborStrength
             .split("-")
             .map(Number);
-  
+
           // Default to extremely low/high values if not defined
           const [vendorMinStrength, vendorMaxStrength] = vendor.laborStrength
             .split("-")
             .map(Number);
-  
+
           return (
             (minStrength === undefined || vendorMinStrength >= minStrength) &&
             (maxStrength === undefined || vendorMaxStrength <= maxStrength)
@@ -155,9 +154,9 @@ const SearchResultFilters = () => {
             }
             return parseInt(age, 10);
           });
-  
+
           const vendorAgeMatch = vendor.businessAge.match(/(\d+)\+?\s*Years/);
-  
+
           if (vendorAgeMatch) {
             const vendorAge = parseInt(vendorAgeMatch[1], 10);
             if (minAge !== undefined && maxAge !== undefined) {
@@ -177,8 +176,27 @@ const SearchResultFilters = () => {
         }
         return true;
       });
-  
+
     setdisplayedVendors(filteredVendors);
+
+    // Set search badges based on active filters
+    const activeFilters = [];
+    if (showOnlyVerified) activeFilters.push("Verified Vendors");
+    if (projectsCompletedFilter > 0)
+      activeFilters.push(`Projects Completed: ${projectsCompletedFilter}+`);
+    if (turnoverFilter > 0)
+      activeFilters.push(`Turnover: ${turnoverFilter}+ lakh`);
+    if (selectedCities.length > 0)
+      activeFilters.push(`Cities: ${selectedCities.join(", ")}`);
+    if (citySearchQuery) activeFilters.push(`City Search: ${citySearchQuery}`);
+    if (selectedLaborStrength)
+      activeFilters.push(`Labor Strength: ${selectedLaborStrength}`);
+    if (selectedBusinessAge)
+      activeFilters.push(`Business Age: ${selectedBusinessAge} years`);
+
+    setSearchBadges(activeFilters); // Update search badges context
+    
+
   }, [
     convertedVendorsData,
     showOnlyVerified,
@@ -189,19 +207,10 @@ const SearchResultFilters = () => {
     selectedLaborStrength,
     selectedBusinessAge,
     setdisplayedVendors,
+    setSearchBadges,
   ]);
-  
-  const activeFilters = [];
-  if (showOnlyVerified) activeFilters.push("Verified Vendors");
-  if (projectsCompletedFilter > 0) activeFilters.push(`Projects Completed: ${projectsCompletedFilter}+`);
-  if (turnoverFilter > 0) activeFilters.push(`Turnover: ${turnoverFilter}+ lakh`);
-  if (selectedCities.length > 0) activeFilters.push(`Cities: ${selectedCities.join(", ")}`);
-  if (citySearchQuery) activeFilters.push(`City Search: ${citySearchQuery}`);
-  if (selectedLaborStrength) activeFilters.push(`Labor Strength: ${selectedLaborStrength}`);
-  if (selectedBusinessAge) activeFilters.push(`Business Age: ${selectedBusinessAge} years`);  
-
   return (<>
-  <SearchResultBadges activeFilters={activeFilters}/>
+  
     <div className="w-[340px] h-[90vh] overflow-hidden">
       <div
         className="flex flex-col sticky px-8 pt-[24px] h-full"
@@ -321,7 +330,7 @@ const SearchResultFilters = () => {
             {labourOpen && (
               <div className="mt-3">
               <div className="flex flex-col mt-2">
-                {["0-10", "10-50", "50-100", "100-200"].map((option) => (
+                {["1-10", "10-50", "50-100", "100-200"].map((option) => (
                   <label key={option} className="flex items-center mb-2">
                     <input
                       type="radio"
