@@ -1,9 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import Tooltip from "@mui/material/Tooltip";
 import Zoom from "@mui/material/Zoom";
+import { useVendors } from "./VendorsContext";
+import vendorData from "./vendorData.json";
 
 const SearchResultSearchbar = () => {
     const cities = ["Pune", "Mumbai", "Bangaluru", "Nashik", "Ahmednagar"];
+    const { setSearchfilters } = useVendors(); // Access the context
+
     const [error, setError] = useState(false);
     const [vendorClicked, setVendorClicked] = useState(false);
     const [regionClicked, setRegionClicked] = useState(false);
@@ -53,10 +57,13 @@ const SearchResultSearchbar = () => {
     };
 
     const handleSearchClick = (e) => {
+        e.preventDefault();
+
+        // Check if any of the required fields are empty
         if (
-            selectedVendorType === "" ||
-            selectedTradeOrBusiness === "" ||
-            selectedRegion === ""
+            selectedVendorType.trim() === "" ||
+            selectedTradeOrBusiness.trim() === "" ||
+            selectedRegion.trim() === ""
         ) {
             setError(true);
             setShowLeftDivider(true);
@@ -64,7 +71,17 @@ const SearchResultSearchbar = () => {
             setSelectedSection("");
         } else {
             setError(false);
-            // Perform search action
+
+            // Prepare the filters object
+            const filters = {
+                vendorType: selectedVendorType,
+                tradeOrBusiness: selectedTradeOrBusiness,
+                region: selectedRegion,
+            };
+
+            // Store the filters in the context
+            setSearchfilters(filters);
+
             setSelectedSection("");
         }
     };
@@ -78,6 +95,7 @@ const SearchResultSearchbar = () => {
     const handleVendorHover = () => {
         setShowLeftDivider(false);
     };
+
     const handleVendorNonHover = () => {
         setShowLeftDivider(true);
     };
@@ -94,6 +112,7 @@ const SearchResultSearchbar = () => {
         setShowLeftDivider(false);
         setShowRightDivider(false);
     };
+
     const handleTradeOrBusinessNonHover = () => {
         setShowLeftDivider(true);
         setShowRightDivider(true);
@@ -109,6 +128,7 @@ const SearchResultSearchbar = () => {
     const handleRegionHover = () => {
         setShowRightDivider(false);
     };
+
     const handleRegionNonHover = () => {
         setShowRightDivider(true);
     };
@@ -129,7 +149,7 @@ const SearchResultSearchbar = () => {
 
     const handleKeyDown = (e) => {
         if (e.key === "Enter") {
-            handleSearchClick();
+            handleSearchClick(e);
             e.preventDefault();
         }
     };
@@ -152,23 +172,18 @@ const SearchResultSearchbar = () => {
 
     return (
         <div
-            className={`flex justify-start items-center  ${selectedSection === "" ? "bg-[#F4F5F6]" : "bg-[#EBEBEB]"
-                } md:w-[527px] md:h-[44px] lg:w-[639px] lg:h-[50px] border rounded-full shadow ${error
-                    ? "border-[1px] border-[#EB5A4F] ring ring-red-200"
-                    : "border-slate-300 "
-                }`}
+            className={`flex justify-start items-center ${selectedSection === "" ? "bg-[#F4F5F6]" : "bg-[#EBEBEB]"} md:w-[527px] md:h-[44px] lg:w-[639px] lg:h-[50px] border rounded-full shadow ${error ? "border-[1px] border-[#EB5A4F] ring ring-red-200" : "border-slate-300"}`}
         >
-            {/* vendor type */}
+            {/* Vendor Type */}
             <div
                 onMouseEnter={handleVendorHover}
                 onMouseLeave={handleVendorNonHover}
                 onClick={handleVendorDropdown}
-                className="relative "
+                className="relative"
                 style={{ borderTopLeftRadius: "50px", borderBottomLeftRadius: "50px" }}
             >
                 <div
-                    className={`flex items-center hover:rounded-full rounded-full md:w-[140px] md:h-[43px]  lg:w-[160px] lg:h-[49px] ${selectedSection === "vendor" ? "bg-white" : "hover:bg-[#E1E1E1]"
-                        }`}
+                    className={`flex items-center hover:rounded-full rounded-full md:w-[140px] md:h-[43px] lg:w-[160px] lg:h-[49px] ${selectedSection === "vendor" ? "bg-white" : "hover:bg-[#E1E1E1]"}`}
                 >
                     <img
                         src="https://storagereponeevaydevcdn.blob.core.windows.net/business/user_icon_searchbar.svg"
@@ -177,14 +192,17 @@ const SearchResultSearchbar = () => {
                     />
                     <input
                         type="text"
-                        className="h-6 w-full focus:outline-none text-sm text-black font-medium border-none focus:ring-transparent bg-transparent px-[12px] placeholder:font-medium lg:placeholder:text-sm md:placeholder:text-xs lg:mr-1 overflow-x-auto  placeholder-[#787878]"
+                        className="h-6 w-full focus:outline-none text-sm text-black font-medium border-none focus:ring-transparent bg-transparent px-[12px] placeholder:font-medium lg:placeholder:text-sm md:placeholder:text-xs lg:mr-1 overflow-x-auto placeholder-[#787878]"
                         value={selectedVendorType}
                         onKeyDown={handleKeyDown}
                         onChange={(e) => setSelectedVendorType(e.target.value)}
                         placeholder="Vendor Type"
                     />
-                    <img src="https://storagereponeevaydevcdn.blob.core.windows.net/business/searchbar_arrow.svg" alt="" className="md:pr-[8px] lg:pr-[12px]" />
-
+                    <img
+                        src="https://storagereponeevaydevcdn.blob.core.windows.net/business/searchbar_arrow.svg"
+                        alt=""
+                        className="md:pr-[8px] lg:pr-[12px]"
+                    />
                     {!selectedVendorType.trim() && error && (
                         <Tooltip
                             title="This field is required"
@@ -232,16 +250,11 @@ const SearchResultSearchbar = () => {
                 onClick={handleTradeDropdown}
                 className="relative flex items-center"
             >
-                {showLeftDivider &&
-                    selectedSection !== "trade" &&
-                    selectedSection !== "vendor" && (
-                        <div className="pb-1 absolute left-0" style={{ width: '0.5px', height: '21px', backgroundColor: '#BFBFBF' }}></div>
-                    )}
+                {showLeftDivider && selectedSection !== "trade" && selectedSection !== "vendor" && (
+                    <div className="pb-1 absolute left-0" style={{ width: '0.5px', height: '21px', backgroundColor: '#BFBFBF' }}></div>
+                )}
                 <div
-                    className={`flex items-center hover:rounded-full md:w-[214px] md:h-[43px] lg:w-[263px] lg:h-[49px] ${selectedSection === "trade"
-                        ? "bg-white rounded-full"
-                        : "hover:bg-[#E1E1E1]"
-                        }`}
+                    className={`flex items-center hover:rounded-full md:w-[214px] md:h-[43px] lg:w-[263px] lg:h-[49px] ${selectedSection === "trade" ? "bg-white rounded-full" : "hover:bg-[#E1E1E1]"}`}
                 >
                     <img
                         src="https://storagereponeevaydevcdn.blob.core.windows.net/business/N2_searchbar_magnifying_glass.svg"
@@ -286,14 +299,11 @@ const SearchResultSearchbar = () => {
                     borderBottomRightRadius: "50px",
                 }}
             >
-                {showRightDivider &&
-                    selectedSection !== "trade" &&
-                    selectedSection !== "region" && (
-                        <div className="absolute lg:mt-3 md:mt-2  left-0" style={{ width: '0.5px', height: '21px', backgroundColor: '#BFBFBF' }}></div>
-                    )}
+                {showRightDivider && selectedSection !== "trade" && selectedSection !== "region" && (
+                    <div className="absolute lg:mt-3 md:mt-2 left-0" style={{ width: '0.5px', height: '21px', backgroundColor: '#BFBFBF' }}></div>
+                )}
                 <div
-                    className={`flex items-center rounded-full hover:rounded-full md:h-[43px] lg:w-full lg:h-[49px] ${selectedSection === "region" ? "bg-white" : "hover:bg-[#E1E1E1]"
-                        }`}
+                    className={`flex items-center rounded-full hover:rounded-full md:h-[43px] lg:w-full lg:h-[49px] ${selectedSection === "region" ? "bg-white" : "hover:bg-[#E1E1E1]"}`}
                 >
                     <img
                         src="https://storagereponeevaydevcdn.blob.core.windows.net/business/searchbar_location_nn.svg"
@@ -337,7 +347,7 @@ const SearchResultSearchbar = () => {
                                         <div className="flex items-center pl-4" key={city}>
                                             <li
                                                 onClick={() => handleSelectedRegion(city)}
-                                                className="py-1 hover:bg-[#C3D5FE] hover:rounded-md  w-full mr-4 pl-2"
+                                                className="py-1 hover:bg-[#C3D5FE] hover:rounded-md w-full mr-4 pl-2"
                                             >
                                                 {city}
                                             </li>
@@ -350,7 +360,7 @@ const SearchResultSearchbar = () => {
                                 <div className="flex items-center pl-4" key={city}>
                                     <li
                                         onClick={() => handleSelectedRegion(city)}
-                                        className="py-1 hover:bg-[#C3D5FE] hover:rounded-md  w-full mr-4 pl-2"
+                                        className="py-1 hover:bg-[#C3D5FE] hover:rounded-md w-full mr-4 pl-2"
                                     >
                                         {city}
                                     </li>
@@ -367,9 +377,9 @@ const SearchResultSearchbar = () => {
                     <button
                         onClick={(e) => {
                             e.stopPropagation(); // Stop the event from bubbling up
-                            handleSearchClick();
+                            handleSearchClick(e);
                         }}
-                        className="flex justify-center items-center md:mr-[2px] lg:mr-[6px] w-[38px] h-[38px] rounded-full bg-[#F16500] text-white "
+                        className="flex justify-center items-center md:mr-[2px] lg:mr-[6px] w-[38px] h-[38px] rounded-full bg-[#F16500] text-white"
                     >
                         <img
                             src="https://storagereponeevaydevcdn.blob.core.windows.net/business/searchbar_white.svg"

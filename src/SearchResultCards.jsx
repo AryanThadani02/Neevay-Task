@@ -62,7 +62,7 @@ const BusinessCard = ({ business, onViewContact }) => {
         msOverflowStyle: "none",
         scrollbarWidth: "none",
       }}
-      className="overflow-y-auto lg:w-[867px] md:w-[664px] md:h-[284px] lg:h-[320px] bg-white md:p-[28px] lg:px-[35px] lg:pt-[35px] lg:pb-[15px] rounded-sm my-6"
+      className="overflow-y-auto lg:w-[867px] md:w-[664px] md:h-[284px] lg:h-[315px] bg-white md:p-[28px] lg:px-[35px] lg:pt-[35px] lg:pb-[15px] rounded-sm my-6"
     >
       <div className="flex justify-between">
         <div className="flex space-x-4">
@@ -184,10 +184,11 @@ const BusinessCard = ({ business, onViewContact }) => {
 };
 
 const SearchResultCards = () => {
-  const { displayedVendors } = useVendors();
+  const { displayedVendors, searchfilters } = useVendors();
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
   const handleViewContact = (business) => {
     setSelectedBusiness(business);
   };
@@ -200,17 +201,33 @@ const SearchResultCards = () => {
     setCurrentPage(page);
   };
 
+  // Apply search filters to displayedVendors
+  const filterBusinesses = displayedVendors.filter((vendor) => {
+    const matchesVendorType = searchfilters.vendorType
+      ? vendor.vendorType === searchfilters.vendorType
+      : true;
+    const matchesTradeOrBusiness = searchfilters.tradeOrBusiness
+      ? vendor.services.includes(searchfilters.tradeOrBusiness)
+      : true;
+    const matchesRegion = searchfilters.region
+      ? `${vendor.officeAddress.City}, ${vendor.officeAddress.State}`.includes(searchfilters.region)
+      : true;
+    return matchesVendorType && matchesTradeOrBusiness && matchesRegion;
+  });
+
+  // Pagination
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentBusinesses = displayedVendors.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(displayedVendors.length / itemsPerPage);
+  const currentBusinesses = filterBusinesses.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filterBusinesses.length / itemsPerPage);
 
   return (
     <>
       {/* Placeholder for SearchResultBadges */}
-      <SearchResultBadges />
       <div className="min-h-screen flex flex-col items-center pr-8">
         <div className="mt-4">
+      <SearchResultBadges />
+          
           {currentBusinesses.map((business) => (
             <BusinessCard
               key={business.vendorId}

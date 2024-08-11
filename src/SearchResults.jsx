@@ -4,7 +4,7 @@ import SearchResultCards from './SearchResultCards';
 import SearchResultFilters from './SearchResultFilters';
 import SearchResultText from './SearchResultText';
 import SearchResultFooter from './SearchResultFooter';
-import Example from './Example';
+
 
 const SearchResults = () => {
     const [filtersClicked, setFiltersClicked] = useState(true);
